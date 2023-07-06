@@ -1,70 +1,51 @@
-package org.example.util;
+package org.example.util.field;
 
-import org.example.model.BaseModel;
 import org.springframework.util.MultiValueMap;
 
+import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FilterFlow<T extends BaseModel> {
-    private final Collection<T> dataSource;
-    private final Class<T> entityClass;
-    private final MultiValueMap<String, Object> requestParameters;
-    private List<Field<T>> fieldList = new ArrayList<>();
-    private final Map<String, String> fieldMapper;
-
-    public FilterFlow(Collection<T> dataSource,
-                      Class<T> entityClass,
-                      MultiValueMap<String, Object> requestParameters,
-                      Map<String, String> fieldMapper) {
-        this.entityClass = entityClass;
-        this.dataSource = dataSource;
-        this.requestParameters = requestParameters;
-        this.fieldMapper = fieldMapper;
+public class FilterFlow<T> {
+    private final List<FilterMap> filterMaps;
+    //requestParameters anlık olarak fonksiyona tahsis edilecek...
+    //public Set<RequestParameter> requestParameters;
+    public FilterFlow(List<FilterMap> filterMaps) {
+        this.filterMaps = filterMaps;
     }
 
-    public void resolveParameters() {
-        java.lang.reflect.Field[] entityFields = entityClass.getDeclaredFields();
+    public Collection<T> executeFilters(MultiValueMap<String, String> rawParameters) {
 
-        requestParameters.forEach((key, values) -> {
-            java.lang.reflect.Field entityField = Arrays.stream(entityFields)
-                    .filter(field -> field.getName() == key).findFirst().get();
+        /*
+         * 1-Gelen istek parametrelerini dolaş
+         * price, price, color ...
+         * bir tanesinden birden fazla da olabilir
+         * 2-İstek parametrelerini dolaştırken hangi çeşit kurala sahip olduğunu bul
+         *   bulduğun kurala göre belki gruplama yapman gerekebilir
+         *
+         *
+        */
+        Collection<T> data = Collections.EMPTY_LIST;
+        Stream<T> stream = data.stream();
+        Iterator<String> iterator = rawParameters.keySet().iterator();
 
-            if(values.size() == 1) {
-                //single...
-                fieldList.add(new Field<T>(key, fieldMapper.get(key), values, createSingleConditionPredicate(entityField, values)));
-            } else{
-                //multiple...
-                //it is still missing.. there should be multiple and condition...
-                fieldList.add(new Field<T>(key, fieldMapper.get(key), values, createMultipleConditionsPredicate(entityField, values)));
-            }
-        });
-    }
-
-    private Predicate<T> createSingleConditionPredicate(java.lang.reflect.Field entityField, List<Object> values) {
-        return (entity) -> {
+        while(iterator.hasNext()) {
             try {
-                return entityField.get(entity).equals(values.get(0));
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
+                String clientFilterName = iterator.next();
+
+                //find parameter values by clientFilterName
+                List<String> values = rawParameters.get(clientFilterName);
+                FilterMap filterMap = filterMaps.stream()
+                        .filter(map -> map.clientFilterName.equals(clientFilterName))
+                        .findFirst().orElseThrow(() -> new RuntimeException());
+
+                stream = filterMap.filterRule.performRule(filterMap.entityFieldName, stream, values);
+            } catch (Exception ex) {
+                System.out.println(ex.getMessage());
             }
-        };
-    }
-    private Predicate<T> createMultipleConditionsPredicate(java.lang.reflect.Field entityField, List<Object> values) {
-        return (entity) -> {
-            try {
-                return values.contains(entityField.get(entity));
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
+        }
 
-    public Collection<T> terminateAsList(Stream<T> input) {
-        return input.collect(Collectors.toList());
+        return stream.collect(Collectors.toList());
     }
-
-
 }
