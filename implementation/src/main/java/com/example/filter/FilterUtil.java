@@ -9,7 +9,7 @@ public final class FilterUtil {
     private FilterUtil() {}
 
     public static void checkIfParameterHasValues(List<String> values) throws ParameterValueMismatchException {
-        if(values.size() == 0)
+        if(values.size() > 0)
             return;
         throw new ParameterValueMismatchException();
     }

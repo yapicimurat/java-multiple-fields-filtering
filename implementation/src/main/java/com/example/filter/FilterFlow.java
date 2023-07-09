@@ -7,11 +7,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Component
 public class FilterFlow {
     private final Map<String, FilterMap> filterMaps;
-    public FilterFlow() {
-        this.filterMaps = new HashMap<>();
+    public FilterFlow(Map<String, FilterMap> filterMaps) {
+        this.filterMaps = filterMaps;
     }
 
     public <T> Collection<T> executeFilters(Collection<T> dataSource, MultiValueMap<String, String> rawParameters) {
