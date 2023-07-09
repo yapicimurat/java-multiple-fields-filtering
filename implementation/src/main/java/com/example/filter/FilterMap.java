@@ -1,4 +1,4 @@
-package org.example.util.field;
+package com.example.filter;
 
 public class FilterMap<T> {
     public final String clientFilterName;

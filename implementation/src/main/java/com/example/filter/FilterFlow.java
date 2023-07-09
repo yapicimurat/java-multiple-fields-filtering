@@ -1,16 +1,17 @@
-package org.example.util.field;
+package com.example.filter;
 
+import com.example.filter.exception.ParameterNoRuleException;
+import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-//FilterFlow will be singleton instance
+@Component
 public class FilterFlow {
-    //Map<String: "clientFilterName", FilterMap>
     private final Map<String, FilterMap> filterMaps;
-    public FilterFlow(Map<String, FilterMap> filterMaps) {
-        this.filterMaps = filterMaps;
+    public FilterFlow() {
+        this.filterMaps = new HashMap<>();
     }
 
     public <T> Collection<T> executeFilters(Collection<T> dataSource, MultiValueMap<String, String> rawParameters) {

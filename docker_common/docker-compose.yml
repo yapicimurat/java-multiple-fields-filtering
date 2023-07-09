@@ -1,0 +1,6 @@
+version: "3.0"
+services:
+  multiple_filtering_backend:
+    build: ../implementation/docker/
+    ports:
+      - "3306:3306"

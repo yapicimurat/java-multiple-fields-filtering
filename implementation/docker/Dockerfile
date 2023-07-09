@@ -1,0 +1,11 @@
+FROM mysql:latest
+
+#Environments Variables
+ENV MYSQL_ROOT_PASSWORD=123456789
+ENV MYSQL_DATABASE=multiple_filtering
+ENV MYSQL_USER=yapicimurat
+ENV MYSQL_PASSWORD=123456789
+
+EXPOSE 3306
+
+CMD ["mysqld"]
